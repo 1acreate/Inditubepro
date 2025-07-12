@@ -1,21 +1,33 @@
-
 {
   "name": "IndiTube",
   "short_name": "IndiTube",
-  "start_url": "/",
+  "description": "IndiTube - India's Own YouTube Platform",
+  "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#111111",
+  "background_color": "#000000",
+  "theme_color": "#ffc107",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/app-icon.png",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/app-icon.png",
+      "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/screen1.png",
+      "sizes": "768x1365",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/screenshots/screen2.png",
+      "sizes": "768x1365",
       "type": "image/png"
     }
   ]
