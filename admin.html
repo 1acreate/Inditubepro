@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndiTube Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; padding: 0; }
+    header { background: #111; color: white; padding: 15px; text-align: center; font-size: 22px; }
+    .container { padding: 20px; }
+    .video-entry { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .video-entry h3 { margin: 5px 0; font-size: 18px; }
+    .video-entry p { margin: 2px 0; font-size: 14px; }
+    .badge { font-size: 16px; color: gold; animation: spin 2s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <header>IndiTube Admin Dashboard</header>
+  <div class="container">
+    <h2>Total Videos: <span id="total"></span></h2>
+    <div id="videoList"></div>
+  </div>  <script>
+    const videoList = document.getElementById("videoList");
+    const totalSpan = document.getElementById("total");
+
+    const JSONBIN_KEY = "$2b$10$eC4rXqvDR9crJBZrjE4HfuP8XW1VsIt8a2bHSk6mV5eP0f4Vu3KiK";
+    const BIN_ID = "6624c3d0ad19ca34f8632ae1";
+
+    fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: {
+        "X-Master-Key": JSONBIN_KEY
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const videos = data.record || [];
+      totalSpan.textContent = videos.length;
+      videoList.innerHTML = videos.map(v => `
+        <div class='video-entry'>
+          <h3>${v.title} <span class="badge">💎</span></h3>
+          <p>Channel: ${v.channel}</p>
+          <p>Likes: ${v.likes || 0} | Dislikes: ${v.dislikes || 0} | Connects: ${v.connects || 0}</p>
+        </div>
+      `).join('');
+    })
+    .catch(err => {
+      videoList.innerHTML = `<p style='color:red;'>Error loading videos. Check keys or bin.</p>`;
+    });
+  </script></body>
+</html>

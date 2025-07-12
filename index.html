@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IndiTube v4.1</title>
+  <link rel="manifest" href="/manifest.json" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
+  </script>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f7f7f7; }
+    header { background: #111; color: white; padding: 1rem; text-align: center; font-size: 24px; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    #wallet { float: right; background: gold; color: black; padding: 5px 12px; border-radius: 20px; font-size: 14px; margin-right: 15px; }
+    nav { background: #222; display: flex; justify-content: space-around; flex-wrap: wrap; padding: 10px 0; }
+    nav button { background: #444; color: white; border: none; padding: 10px 18px; margin: 4px; border-radius: 20px; cursor: pointer; font-size: 14px; }
+    .section { display: none; padding: 20px; }
+    .active { display: block; }
+    .video-card { background: white; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 20px; }
+    .video-card iframe, .video-card video { width: 100%; height: 220px; border-radius: 8px; }
+    .channel-info { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+    .channel-info img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+    .badge { animation: rotate 2s linear infinite; display: inline-block; }
+    @keyframes rotate { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .btn-row button { padding: 6px 12px; font-size: 13px; border-radius: 20px; border: none; cursor: pointer; }
+    .like { background: #2196f3; color: white; }
+    .dislike { background: #f44336; color: white; }
+    .share { background: #9c27b0; color: white; }
+    .connect { background: yellow; color: black; }
+    .connect.connected { background: green; color: white; }
+  </style>
+</head>
+<body>
+  <header>
+    IndiTube <span id="wallet">💰 0</span>
+  </header>  <nav>
+    <button onclick="show('home')">IndiHome</button>
+    <button onclick="show('search')">Search Add Earn</button>
+    <button onclick="show('upload')">Upload</button>
+    <button onclick="show('withdraw')">Withdraw</button>
+  </nav>  <div id="home" class="section active"></div>
+  <div id="search" class="section">
+    <input id="searchBox" placeholder="Search YouTube..." style="width:75%;padding:10px;border-radius:20px;">
+    <button onclick="searchYT(this)" style="padding:10px;border-radius:20px;">🔍</button>
+    <div id="searchResults"></div>
+  </div>
+  <div id="upload" class="section">
+    <input id="uploadTitle" placeholder="Video Title"><br>
+    <input id="uploadChannel" placeholder="Channel Name"><br>
+    <input id="uploadPhoto" placeholder="Channel Photo URL"><br>
+    <input type="file" id="uploadFile"><br>
+    <button onclick="manualUpload(this)" style="padding:10px 20px;border-radius:20px;background:yellow;">Upload to IndiHome</button>
+  </div>
+  <div id="withdraw" class="section">
+    <h3>Withdraw</h3>
+    <p>You earn ₹0.35 every 30s watched.<br> Upload & referral earns ₹3.5<br> Withdrawal min ₹500, must refer 2 users.</p>
+    <input placeholder="Your Name"><br>
+    <input placeholder="UPI ID"><br>
+    <input placeholder="Total Earned Amount"><br>
+    <input placeholder="Withdraw Amount"><br>
+    <button onclick="alert('Your money is on the way')">Submit</button>
+  </div>  <script>
+    let coins = 0;
+    let home = document.getElementById("home");
+    let data = [];
+
+    function show(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function updateWallet() {
+      document.getElementById("wallet").innerText = (Math.random()<0.5 ? "💰" : "₹") + " " + coins.toFixed(2);
+    }
+
+    function addCard({title, url, channel, img}) {
+      let badge = `<span class='badge'>💎</span>`;
+      let isYT = url.includes("youtube");
+      let videoEl = isYT ? `<iframe src='${url}' allowfullscreen></iframe>` : `<video src='${url}' controls></video>`;
+      let card = `<div class='video-card'>
+        <div class='channel-info'><img src='${img}'><b>${channel}</b> ${badge}</div>
+        ${videoEl}
+        <div><b>${title}</b></div>
+        <div class='btn-row'>
+          <button class='like' onclick='count(this,"👍 Like")'>👍 Like (0)</button>
+          <button class='dislike' onclick='count(this,"👎 Dislike")'>👎 Dislike (0)</button>
+          <button class='share' onclick='share("${url}")'>📤 Share</button>
+          <button class='connect' onclick='connect(this)'>Connect (0)</button>
+        </div>
+      </div>`;
+      home.innerHTML = card + home.innerHTML;
+    }
+
+    function count(btn, label) {
+      let c = parseInt(btn.innerText.match(/(\d+)/)?.[1]||"0") + 1;
+      btn.innerText = `${label} (${c})`;
+    }
+
+    function connect(btn) {
+      if (btn.classList.contains("connected")) return;
+      btn.classList.add("connected");
+      count(btn,"Connect");
+    }
+
+    function share(url) {
+      navigator.clipboard.writeText(url);
+      alert("Link Copied: "+url);
+    }
+
+    function searchYT(btn) {
+      btn.style.background = "purple";
+      let q = document.getElementById("searchBox").value.trim();
+      fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=4&q=${q}&key=AIzaSyC8deh4aDWekkvuegD5g6mNhFUrbRNVUTU`)
+      .then(res=>res.json())
+      .then(json=>{
+        document.getElementById("searchResults").innerHTML = json.items.map(v=>{
+          let vid = v.id.videoId;
+          let title = v.snippet.title;
+          let channel = v.snippet.channelTitle;
+          let img = v.snippet.thumbnails.default.url;
+          let url = `https://www.youtube.com/embed/${vid}`;
+          return `<div class='video-card'>
+            <div><b>${title}</b></div>
+            <iframe src='${url}' allowfullscreen></iframe>
+            <button onclick='addToHome(this,"${title}","${url}","${channel}","${img}")' style='background:yellow;border-radius:20px;padding:6px 12px;'>Add to IndiHome</button>
+          </div>`;
+        }).join('');
+      });
+    }
+
+    function addToHome(btn, title, url, channel, img) {
+      btn.style.background = "purple";
+      let video = {title, url, channel, img};
+      data.unshift(video);
+      addCard(video);
+      coins += 3.5;
+      updateWallet();
+    }
+
+    function manualUpload(btn) {
+      btn.style.background = "purple";
+      let file = document.getElementById("uploadFile").files[0];
+      let url = URL.createObjectURL(file);
+      let title = document.getElementById("uploadTitle").value;
+      let channel = document.getElementById("uploadChannel").value;
+      let img = document.getElementById("uploadPhoto").value;
+      let video = {title, url, channel, img};
+      data.unshift(video);
+      addCard(video);
+      coins += 1;
+      updateWallet();
+    }
+
+    setInterval(()=>{
+      coins += 0.35;
+      updateWallet();
+    }, 30000);
+
+    window.onload = () => {
+      updateWallet();
+    };
+  </script></body>
+</html>
